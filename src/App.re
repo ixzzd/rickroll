@@ -6,14 +6,8 @@ type video = {
 };
 
 let videos = [
-  {
-    title: "Never Gonna Give You Up",
-    path: Packager.require("./never.mp4")
-  },
-  {
-    title: "Together Forever",
-    path: Packager.require("./together.mp4")
-  },
+  {title: "Never Gonna Give You Up", path: Packager.require("./never.mp4")},
+  {title: "Together Forever", path: Packager.require("./together.mp4")},
 ];
 
 type state = {selectedVideo: option(video)};
@@ -46,14 +40,16 @@ let make = _children => {
             style=videoStyle
             shouldPlay=true
             source={`Required(video.path)}
-            onPlaybackStatusUpdate={
-              playbackStatus => {
-                switch (ReasonExpo.Video.didJustFinishGet(playbackStatus)) {
-                  | Some(true) => self.send(ClearVideo)
-                  | _ => ()
-                }
-              }
-            }
+            onPlaybackStatusUpdate=(
+              playbackStatus =>
+                playbackStatus
+                ->ReasonExpo.Video.didJustFinishGet
+                ->Belt.Option.mapWithDefault((), didJustFinish =>
+                    if (didJustFinish) {
+                      self.send(ClearVideo);
+                    }
+                  )
+            )
           />
         | None =>
           videos
